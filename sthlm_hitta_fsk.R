@@ -1,12 +1,7 @@
-library(dplyr)
-library(sf)
-library(osmdata)
-library(jsonlite)
-library(osmdata)
-library(tmap)
-# library(openrouteservice)
-library(geojsonio)
-library(areal)
+list.of.packages <- c("dplyr", "sf", "jsonlite", "osmdata", "tmap","areal")
+new.packages <- list.of.packages[!(list.of.packages %in%
+                                     installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 
 url_st <- "https://apigw.stockholm.se/NoAuth/VirtualhittaserviceDMZ/Rest/servicetypes"
 st <- fromJSON(url_st)
@@ -22,6 +17,5 @@ fsk$changed <- as.Date(fsk$changed)
 
 fsk <- st_as_sf(fsk, coords = c("east", "north"), crs = 3011)
 
-# st_write(fsk, "fsk.geojson", delete_dsn = TRUE)
-
-tm_shape(fsk) + tm_symbols()
+tmap_mode("view")
+tm_shape(fsk) + tm_symbols(col = "blue")
