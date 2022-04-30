@@ -9,6 +9,13 @@ library(jsonlite)
 library(osmdata)
 library(tmap)
 
+url_dataportal <- "https://dataportalen.stockholm.se/dataportalen/Data/Stadsbyggnadskontoret/Stadsdelsnamndsomrade_2020.zip"
+f <- paste(getwd(), "/data/sdn.zip", sep = "")
+download.file(url_dataportal, f, mode="wb")
+unzip(f, exdir = "data")
+sdn <- st_read("data/Stadsdelsn„mndsomr†de_2020.shp") %>% 
+  st_zm(drop = TRUE)
+
 url_st <- "https://apigw.stockholm.se/NoAuth/VirtualhittaserviceDMZ/Rest/servicetypes"
 st <- fromJSON(url_st)
 
