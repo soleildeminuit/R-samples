@@ -21,7 +21,17 @@ fsk$north <- fsk$location$north
 fsk$created <- as.Date(fsk$created)
 fsk$changed <- as.Date(fsk$changed)
 
-fsk <- st_as_sf(fsk, coords = c("east", "north"), crs = 3011)
+fsk <- fsk %>% 
+  st_as_sf(
+    coords = c("east", "north"), 
+    crs = 3011
+  ) %>% 
+  select(-location)
 
 tmap_mode("view")
-tm_shape(fsk) + tm_symbols()
+tm_shape(fsk) + 
+  tm_symbols(col = "blue")
+  # tm_text(
+  #   "name", 
+  #   remove.overlap = TRUE
+  # )
