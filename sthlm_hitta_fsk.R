@@ -9,31 +9,15 @@ library(jsonlite)
 library(osmdata)
 library(tmap)
 
+# Hämta gränser för stadsdelsnämndsområden
 sdn <- st_read("data/sdn_2020.shp") %>%
-  st_zm(drop = TRUE)
-# url_webquery <- "http://kartor.stockholm.se/bios/webquery/app/baggis/web/web_query?section="
-# methods <- c("locate*stadsdelsnamnd", "stadsdelsnamnd*suggest")
-# urlJ <- fromJSON(paste(url_webquery,
-#                        methods[1],
-#                        "&&resulttype=json",
-#                        sep = ""))
-# urlJ2 <- fromJSON(paste(url_webquery,
-#                         methods[2],
-#                         "&&resulttype=json",
-#                         sep = ""))
-# 
-# sfc <- st_as_sfc(urlJ$dbrows$WKT, EWKB = F)
-# sdn <- st_sf(sfc, crs = 3011) %>%
-#   rename(geometry = sfc) %>%
-#   mutate(ADM_ID = as.integer(urlJ$dbrows$ID)) %>% 
-#   arrange(ADM_ID)
-# 
-# sdn$NAMN <-  urlJ2$dbrows$RESULT
-# sdn <- sdn %>% dplyr::select(NAMN, ADM_ID)
-# 
-# sdn <- sdn %>% mutate(ADM_ID = case_when(ADM_ID == 21 ~ 22, TRUE ~ as.numeric(ADM_ID)))
+  st_zm(drop = TRUE) %>% 
+  mutate(Namn = Sdn_omarde)
 
+# Hämta förskolor (servicetype = 2)
 url_st <- "https://apigw.stockholm.se/NoAuth/VirtualhittaserviceDMZ/Rest/servicetypes"
+
+# Se alle verksamhetstyper med View(st)
 st <- fromJSON(url_st)
 
 url_fsk <- "https://apigw.stockholm.se/NoAuth/VirtualhittaserviceDMZ/Rest/serviceunits?filter[servicetype.id]=2&page[limit]=1500&page[offset]=0&sort=name"
@@ -52,10 +36,13 @@ fsk <- fsk %>%
   ) %>% 
   select(-location)
 
+# Skapa en interaktiv webbkarta
 tmap_mode("view")
 tm_shape(fsk) + 
-  tm_symbols(col = "blue")
-# tm_text(
-#   "name", 
-#   remove.overlap = TRUE
-# )
+  tm_symbols(
+    col = "blue", 
+    alpha = 0.7, 
+    scale = 0.5) + 
+  tm_shape(sdn) + 
+  tm_borders(lwd = 3) + 
+  tm_text("Namn")
