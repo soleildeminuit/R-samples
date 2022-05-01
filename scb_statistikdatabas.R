@@ -4,24 +4,32 @@ library(openxlsx)
 library(tmap)
 library(viridis)
 
-# https://www.scb.se/vara-tjanster/oppna-data/oppna-geodata/
+if (!file.exists("data/DeSO_2018.shp")){
+  url_deso <- "https://geodata.scb.se/geoserver/stat/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=stat%3ADeSO.2018&outputFormat=SHAPE-ZIP&format_options=charset:UTF-8"
+  url_regso <- "https://geodata.scb.se/geoserver/stat/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=stat%3ARegSO.2018&outputFormat=SHAPE-ZIP&format_options=charset:UTF-8"
+  
+  f <- paste(getwd(), "/data/deso.zip", sep = "")
+  download.file(url_deso, f, mode="wb")
+  unzip(f, exdir = "data")
+  
+  f <- paste(getwd(), "/data/regso.zip", sep = "")
+  download.file(url_regso, f, mode="wb")
+  unzip(f, exdir = "data")
+}
 
-# "http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN"
-# d <- pxweb_interactive("http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN")
-# d <- pxweb_interactive("api.scb.se")
-
-# query <- pxweb_query_as_json(d$query, pretty = TRUE)
-
-pxq <- pxweb_query("data/query_befstat.json")
-
-pxd <- pxweb_get("http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN",
-                 pxq)
-pxd
-
-pxdf <- as.data.frame(pxd, column.name.type = "text", variable.value.type = "text")
+if (!file.exists("data/pxdf.rds")){
+  pxq <- pxweb_query("data/query_befstat.json")
+  
+  pxd <- pxweb_get("http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN",
+                   pxq)
+  pxd
+  
+  pxdf <- as.data.frame(pxd, column.name.type = "text", variable.value.type = "text")
+  saveRDS(pxdf, "data/pxdf.rds")
+} else {
+  pxdf <- readRDS("data/pxdf.rds")
+}
 head(pxdf)
-
-# saveRDS(pxdf, "data/pxdf.rds")
 
 deso_sthlm_df <- pxdf %>% 
   filter(grepl("^\\d{4}[A-C]\\d{4}$", region) == TRUE,
@@ -43,7 +51,7 @@ deso_sthlm_df <- deso_sthlm_df %>%
 
 # Join statistics with geography
 # NOTE: First run the script scb_wfs.R
-deso_areas_sf <- st_read("data/DeSO_2018.gpkg") %>% 
+deso_areas_sf <- st_read("data/DeSO_2018.shp") %>% 
   filter(kommun == "0180") %>%
   left_join(., deso_sthlm_df, by = c("deso" = "deso"))
 
@@ -51,7 +59,7 @@ deso_areas_sf <- st_read("data/DeSO_2018.gpkg") %>%
 
 # Join statistics with geography
 # NOTE: First run the script scb_wfs.R
-regso_areas_sf <- st_read("data/RegSO_2018.gpkg") %>% filter(kommun == "0180") %>% 
+regso_areas_sf <- st_read("data/RegSO_2018.shp") %>% filter(kommun == "0180") %>% 
   rename(regso_namn = regso, regso = regsokod)
 
 # Sum population counts per RegSO
@@ -63,7 +71,7 @@ regso_areas_sf <- regso_areas_sf %>% left_join(.,
                                                by = "regso")
 
 # # Create a thematic map
-t <- tm_shape(regso_areas_sf) + 
+tm_shape(regso_areas_sf) + 
   tm_fill(
     "pop_count", 
     style = "jenks", 
@@ -71,6 +79,3 @@ t <- tm_shape(regso_areas_sf) +
   tm_borders() +
   tm_shape(regso_areas_sf) +
   tm_text("regso_namn", remove.overlap = TRUE)
-
-# Save highres map
-tmap_save(t, "figs/map.png", width = 297, height = 210, units = "mm", dpi = 300)
