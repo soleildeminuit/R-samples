@@ -1,7 +1,13 @@
+list.of.packages <- c("pxweb", "openxlsx")
+new.packages <- list.of.packages[!(list.of.packages %in%
+                                     installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(pxweb)
 library(dplyr)
-library(openxlsx)
+library(sf)
 library(tmap)
+library(openxlsx)
 library(viridis)
 
 if (!file.exists("data/DeSO_2018.shp")){
