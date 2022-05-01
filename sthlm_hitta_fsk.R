@@ -13,7 +13,8 @@ url_dataportal <- "https://dataportalen.stockholm.se/dataportalen/Data/Stadsbygg
 f <- paste(getwd(), "/data/sdn.zip", sep = "")
 download.file(url_dataportal, f, mode="wb")
 unzip(f, exdir = "data")
-sdn <- st_read("data/Stadsdelsn„mndsomr†de_2020.shp") %>% 
+l <- unzip(f, exdir = "data", list = TRUE)
+sdn <- st_read(paste("data/",l[4,]$Name, sep = "")) %>% 
   st_zm(drop = TRUE)
 
 url_st <- "https://apigw.stockholm.se/NoAuth/VirtualhittaserviceDMZ/Rest/servicetypes"
