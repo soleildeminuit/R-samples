@@ -64,7 +64,6 @@ deso_areas_sf <- st_read("data/DeSO_2018.shp") %>%
 # RegSO
 
 # Join statistics with geography
-# NOTE: First run the script scb_wfs.R
 regso_areas_sf <- st_read("data/RegSO_2018.shp") %>% filter(kommun == "0180") %>% 
   rename(regso_namn = regso, regso = regsokod)
 
