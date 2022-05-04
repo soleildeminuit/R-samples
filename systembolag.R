@@ -34,7 +34,7 @@ for (package in c(
 # api_key <- "<DIN API_NYCKEL>" + Enter                                           #
 #                                                                                 #
 ###################################################################################
-api_key <- "<FYLL_I_DIN_API_NYCKEL_HÄR"
+api_key <- "FYLL_I_DIN_API_NYCKEL_HÄR"
 
 # Hämta gränser för stadsdelsnämndsområden
 sdn <- st_read("data/sdn_2020.shp") %>%
@@ -107,32 +107,3 @@ t <- tm_shape(sdn) +
     legend.format=list(fun=function(x) formatC(x, digits=0, format="d", big.mark = " "), text.separator = "-")
   )
 t
-
-# tmap_save(t, "Systembolag.png", width = 297, height = 210, units = "mm", dpi = 300)
-
-# # Transformera till SWEREF 99 18 00 TM
-# sb_sthlm <- sb_sthlm %>% st_transform(., crs = 3011)
-# 
-# # Spara geodata som ESRI Shape-filer
-# st_write(sb_sthlm, "data/systembolag.shp", delete_dsn = T)
-# 
-# ############################## Open Street Map (OSM) ##############################
-# # Hämta alla systembolag inom Stockholms stads gränser från Open Street Map       #
-# ###################################################################################
-# 
-# # Skapa OpenStreetMap-fråga, med stadsdelsnämndsområden som sökområde
-# q0 <- opq(bbox = st_bbox(sdn))
-# 
-# # Hämta alla systembolag inom sökområdet
-# q1 <- add_osm_feature(opq = q0, key = 'shop', value = "alcohol") # add_osm_feature("shop", "supermarket")
-# res1 <- osmdata_sf(q1)
-# 
-# sb_osm <- res1$osm_points
-# sb_osm$name <- iconv(sb_osm$name, "UTF-8")
-# # p <- p %>% dplyr::select(osm_id, name)
-# 
-# # Transformera till SWEREF 99 18 00 TM
-# sb_osm <- sb_osm %>% st_transform(., crs = 3011)
-# 
-# # Spara systembolagen som ESRI-shapefiler
-# st_write(sb_osm, "data/systembolag_osm.shp", delete_dsn = T)

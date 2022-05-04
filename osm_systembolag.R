@@ -6,7 +6,6 @@ for (package in c(
   "jsonlite", 
   "osmdata", 
   "sf", 
-  "areal",
   "tmap", 
   "viridis")) {
   if (!require(package, character.only=T, quietly=T)) {
@@ -17,24 +16,9 @@ for (package in c(
   }
 }
 
-# Installera alla nödvändiga paket, metod 2
-# list.of.packages <- c("ggplot2", "ggmap", "osmdata")
-# new.packages <- list.of.packages[!(list.of.packages %in% 
-#                                      installed.packages()[,"Package"])]
-# if(length(new.packages)) install.packages(new.packages)
-
-################################## Systembolaget ##################################
-# Hämta alla systembolag inom Stockholms stads gränser från Systembolaget         #
-#                                                                                 #
-# OBS! API-nyckel måste först skapas på:                                          #
-# https://api-portal.systembolaget.se/products/Open%20API                         #
-# Nyckeln läggs i textfilen "api_key_systembolaget.R" (i working dir).            #
-#                                                                                 #
-# Textfilen ska bara innehålla en enda rad:                                       #
-# api_key <- "<DIN API_NYCKEL>" + Enter                                           #
-#                                                                                 #
-###################################################################################
-api_key <- "<FYLL_I_DIN_API_NYCKEL_HÄR"
+# ############################## Open Street Map (OSM) ##############################
+# # Hämta alla systembolag inom Stockholms stads gränser från Open Street Map       #
+# ###################################################################################
 
 # Hämta gränser för stadsdelsnämndsområden
 sdn <- st_read("data/sdn_2020.shp") %>%
@@ -42,97 +26,27 @@ sdn <- st_read("data/sdn_2020.shp") %>%
   mutate(Namn = Sdn_omarde) %>% 
   st_transform(crs = 4326)
 
-# Hämta alla Systembolagets butiker (API)
-systembolaget_url <- "https://api-extern.systembolaget.se/site/V2/Store"
+# Skapa OpenStreetMap-fråga, med stadsdelsnämndsområden som sökområde
+q0 <- opq(bbox = st_bbox(sdn))
 
-httpResponse <- GET(systembolaget_url, 
-                    add_headers("Ocp-Apim-Subscription-Key" = api_key))
-probe_result = fromJSON(content(httpResponse, "text", encoding = "UTF-8"))
+# Hämta alla systembolag inom sökområdet
+q1 <- add_osm_feature(opq = q0, key = 'shop', value = "alcohol") # add_osm_feature("shop", "supermarket")
+res1 <- osmdata_sf(q1)
 
-l <- list()
-for (i in 1:nrow(probe_result)){
-  df <- tribble(~name,
-                ~lon,
-                ~lat,
-                ~address,
-                ~city,
-                ~ordersToday,
-                probe_result[i,]$alias,
-                probe_result[i,]$position$longitude,
-                probe_result[i,]$position$latitude,
-                probe_result[i,]$address,
-                probe_result[i,]$city,
-                probe_result[i,]$ordersToday)
-  l[[i]] <- df
-}
-sb <- do.call("rbind", l) %>% st_as_sf(., coords=c("lon","lat"), crs = 4326)
-# Variabeln "sb" innehåller nu alla landets Systembolagsbutiker
+sb_osm <- res1$osm_points
+sb_osm$name <- iconv(sb_osm$name, "UTF-8")
+# p <- p %>% dplyr::select(osm_id, name)
 
-# För att välja endast de som befinner sig inom Stockholms stads gränser...
-sb_sthlm <- st_intersection(sb, sdn)
+# Transformera till SWEREF 99 18 00 TM
+sb_osm <- sb_osm %>% st_transform(., crs = 3011)
 
-# Kolla hur många butiker inom resp. stadsdelsområde
-table(sb_sthlm$Sdn_omarde)
+tmap_mode("plot") # Ange "view" i stället för "plot" om webbkarta
 
-# Enkel plot
-plot(st_geometry(sb_sthlm))
+tm_shape(sdn) + 
+  tm_borders() +
+  tm_text("Namn") +
+  tm_shape(sb_osm) + tm_symbols(col = "blue", alpha = 0.7) + 
+  tm_layout(main.title = "Systembolag från OpenStreetMap")
 
-# Statisk kartvy
-# Ange tmap_mode("view")för interaktiv webbkarta 
-tmap_mode("plot")
-
-t <- tm_shape(sdn) + 
-  tm_borders(alpha = 0) +
-  tm_shape(sb_sthlm) + 
-  tm_symbols(
-    col = "ordersToday", 
-    size = "ordersToday",
-    style = "jenks", 
-    palette = "viridis") +
-  tm_shape(sdn) + 
-  tm_borders(lwd = 3) +
-  tm_shape(sdn) + 
-  tm_text(
-    "Namn",
-    size = 0.5,
-    auto.placement = TRUE,
-    remove.overlap = TRUE,
-    col = "black") +
-  tm_credits("Datakällor: Systembolaget, Stockholms stad",
-             position=c("right", "bottom")) +
-  tm_scale_bar(position=c("left", "bottom")) +
-  tm_compass(type = "arrow", position=c("right", "top"), show.labels = 3) +
-  tm_layout(
-    main.title = "Systembolagsbutiker i Stockholms stad",
-    legend.format=list(fun=function(x) formatC(x, digits=0, format="d", big.mark = " "), text.separator = "-")
-  )
-t
-
-# tmap_save(t, "Systembolag.png", width = 297, height = 210, units = "mm", dpi = 300)
-
-# # Transformera till SWEREF 99 18 00 TM
-# sb_sthlm <- sb_sthlm %>% st_transform(., crs = 3011)
-# 
-# # Spara geodata som ESRI Shape-filer
-# st_write(sb_sthlm, "data/systembolag.shp", delete_dsn = T)
-# 
-# ############################## Open Street Map (OSM) ##############################
-# # Hämta alla systembolag inom Stockholms stads gränser från Open Street Map       #
-# ###################################################################################
-# 
-# # Skapa OpenStreetMap-fråga, med stadsdelsnämndsområden som sökområde
-# q0 <- opq(bbox = st_bbox(sdn))
-# 
-# # Hämta alla systembolag inom sökområdet
-# q1 <- add_osm_feature(opq = q0, key = 'shop', value = "alcohol") # add_osm_feature("shop", "supermarket")
-# res1 <- osmdata_sf(q1)
-# 
-# sb_osm <- res1$osm_points
-# sb_osm$name <- iconv(sb_osm$name, "UTF-8")
-# # p <- p %>% dplyr::select(osm_id, name)
-# 
-# # Transformera till SWEREF 99 18 00 TM
-# sb_osm <- sb_osm %>% st_transform(., crs = 3011)
-# 
-# # Spara systembolagen som ESRI-shapefiler
+# Spara systembolagen som ESRI-shapefiler
 # st_write(sb_osm, "data/systembolag_osm.shp", delete_dsn = T)
