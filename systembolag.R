@@ -28,13 +28,9 @@ for (package in c(
 #                                                                                 #
 # OBS! API-nyckel måste först skapas på:                                          #
 # https://api-portal.systembolaget.se/products/Open%20API                         #
-# Nyckeln läggs i textfilen "api_key_systembolaget.R" (i working dir).            #
-#                                                                                 #
-# Textfilen ska bara innehålla en enda rad:                                       #
-# api_key <- "<DIN API_NYCKEL>" + Enter                                           #
 #                                                                                 #
 ###################################################################################
-api_key <- "FYLL_I_DIN_API_NYCKEL_HÄR"
+api_key <- "DIN_API_NYCKEL_HÄR"
 
 # Hämta gränser för stadsdelsnämndsområden
 sdn <- st_read("data/sdn_2020.shp") %>%
@@ -47,32 +43,24 @@ systembolaget_url <- "https://api-extern.systembolaget.se/site/V2/Store"
 
 httpResponse <- GET(systembolaget_url, 
                     add_headers("Ocp-Apim-Subscription-Key" = api_key))
-probe_result = fromJSON(content(httpResponse, "text", encoding = "UTF-8"))
 
-l <- list()
-for (i in 1:nrow(probe_result)){
-  df <- tribble(~name,
-                ~lon,
-                ~lat,
-                ~address,
-                ~city,
-                ~ordersToday,
-                probe_result[i,]$alias,
-                probe_result[i,]$position$longitude,
-                probe_result[i,]$position$latitude,
-                probe_result[i,]$address,
-                probe_result[i,]$city,
-                probe_result[i,]$ordersToday)
-  l[[i]] <- df
-}
-sb <- do.call("rbind", l) %>% st_as_sf(., coords=c("lon","lat"), crs = 4326)
-# Variabeln "sb" innehåller nu alla landets Systembolagsbutiker
+stores = fromJSON(
+  content(httpResponse, 
+          "text", 
+          encoding = "UTF-8"
+  ),
+  flatten = TRUE) %>% 
+  select(-openingHours)
+
+# Skapa geografiska objekt av butiksraderna.
+stores <- stores %>% 
+  st_as_sf(., coords = c("position.longitude", "position.latitude"), crs = 4326)
 
 # För att välja endast de som befinner sig inom Stockholms stads gränser...
-sb_sthlm <- st_intersection(sb, sdn)
+stores_sthlm <- st_intersection(stores, sdn)
 
 # Kolla hur många butiker inom resp. stadsdelsområde
-table(sb_sthlm$Sdn_omarde)
+table(stores_sthlm$Sdn_omarde)
 
 # Enkel plot
 plot(st_geometry(sb_sthlm))
@@ -83,7 +71,7 @@ tmap_mode("plot")
 
 t <- tm_shape(sdn) + 
   tm_borders(alpha = 0) +
-  tm_shape(sb_sthlm) + 
+  tm_shape(stores_sthlm) + 
   tm_symbols(
     col = "ordersToday", 
     size = "ordersToday",
