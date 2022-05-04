@@ -75,6 +75,10 @@ regso_areas_sf <- regso_areas_sf %>% left_join(.,
                                                pop_count_regso %>% select(-regso_namn),  # Exclude the name as it's in both sides.
                                                by = "regso")
 
+# Spara geodata, med befolkningssiffror.
+st_write(deso_areas_sf, "data/deso_pop.gpkg")
+st_write(regso_areas_sf, "data/regso_pop.gpkg")
+
 # # Create a thematic map
 tm_shape(regso_areas_sf) + 
   tm_fill(
