@@ -65,7 +65,7 @@ stores_sthlm <- st_intersection(stores, sdn)
 table(stores_sthlm$Sdn_omarde)
 
 # Enkel plot
-plot(st_geometry(sb_sthlm))
+plot(st_geometry(stores_sthlm))
 
 # Statisk kartvy
 # Ange tmap_mode("view")för interaktiv webbkarta 
