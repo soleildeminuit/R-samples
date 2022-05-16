@@ -14,9 +14,9 @@ unzip(temp, exdir = "data")
 unlink(temp)
 
 reference_area <- st_read("data/RegSO_2018.shp") %>% 
-  filter(kommun == MUNICIPLITY_CODE) %>% 
+  filter(kommun == MUNICIPALITY_CODE) %>% 
   group_by(kommun) %>% 
-  summarise() %>% 
+  dplyr::summarise() %>% 
   st_transform(crs = 3006)
 
 bb <- st_bbox(reference_area)
@@ -47,6 +47,8 @@ m <- st_intersects(new_grid, reference_area, sparse = FALSE)
 new_grid <- new_grid[m,]
 
 plot(st_geometry(new_grid))
+
+mapview::mapview(new_grid)
 
 #### Uncomment to run ####
 
