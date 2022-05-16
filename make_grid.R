@@ -2,7 +2,7 @@ library(dplyr)
 library(sf)
 
 CELL_SIZE_M <- 1000
-MUNICIPLITY_CODE <- "0180"
+MUNICIPALITY_CODE <- "0180"
 
 RoundUp <- function(from,to) ceiling(from/to)*to
 RoundDown <- function(from,to) floor(from/to)*to
