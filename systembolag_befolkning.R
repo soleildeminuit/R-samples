@@ -8,6 +8,7 @@ for (package in c(
   "sf", 
   "areal",
   "tmap", 
+  "leaflet",
   "viridis")) {
   if (!require(package, character.only=T, quietly=T)) {
     suppressPackageStartupMessages(package)
@@ -30,7 +31,7 @@ for (package in c(
 # https://api-portal.systembolaget.se/products/Open%20API                         #
 #                                                                                 #
 ###################################################################################
-api_key <- "cd585a82c74849bcafee0207a2771849"
+api_key <- "ENTER_API_KEY_HERE"
 
 deso <- st_read("data/deso_pop.gpkg")
 
@@ -87,15 +88,18 @@ stores_buffers <- aw_interpolate(
 
 tmap_mode("view")
 
-t <- tm_shape(sdn) + 
+norrmalm <- sdn %>% filter(Namn %in% c("Norrmalm", "Södermalm"))
+
+t <- tm_shape(sdn, bbox = st_bbox(norrmalm)) + 
   tm_borders(alpha = 0) +
   tm_shape(stores_buffers) + 
   tm_symbols(
     col = "pop_count", 
     size = "pop_count",
     style = "jenks", 
-    alpha = 0.5,
-    palette = "viridis") +
+    alpha = 1,
+    scale = 1.5,
+    palette = "inferno") +
   tm_text("address") +
   tm_shape(sdn) + 
   tm_borders(lwd = 3) +
@@ -113,5 +117,21 @@ t <- tm_shape(sdn) +
   tm_layout(
     main.title = "Systembolagsbutiker i Stockholms stad",
     legend.format=list(fun=function(x) formatC(x, digits=0, format="d", big.mark = " "), text.separator = "-")
-  )
+  ) +
+  tm_basemap(NULL)
 t
+
+lf <- tmap_leaflet(t) %>%  addWMSTiles(
+  "http://kartor.stockholm.se/bios/wms/app/baggis/web/WMS_STHLM_STOCKHOLMSKARTA_GRA_FORENKLAD",
+  # "https://kartor.stockholm.se/bios/wms/app/dpmap/cust_sth/utbf/web/WMS_UTBF_1733",
+  # layers = "p_1002770",
+  layers = "p_1002770",#layers= "p_1200003",
+  options = c(WMSTileOptions(format = "image/png", transparent = TRUE)),
+  group = "aerial",
+  # attribution = "Stockholms stad © 2019", 
+  layerId = "aerialid"
+) %>% mapview:::mapViewLayersControl(names = c("NHDPlus"))
+
+lf
+
+# mapshot(lf, file = "systemb_karta2.png")

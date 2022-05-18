@@ -1,7 +1,15 @@
-library(dplyr)
-library(jsonlite)
-library(sf)
-library(tmap)
+for (package in c(
+  "dplyr", 
+  "jsonlite", 
+  "sf", 
+  "tmap")) {
+  if (!require(package, character.only=T, quietly=T)) {
+    suppressPackageStartupMessages(package)
+    suppressWarnings(package)
+    install.packages(package)
+    library(package, character.only=T)
+  }
+}
 
 url_lake_reg <- "https://opendata-download.smhi.se/svar/Vattenytor_2016.zip"
 
