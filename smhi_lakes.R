@@ -1,7 +1,8 @@
 for (package in c(
   "dplyr", 
   "jsonlite", 
-  "sf", 
+  "sf",
+  "geojsonio",
   "tmap")) {
   if (!require(package, character.only=T, quietly=T)) {
     suppressPackageStartupMessages(package)
@@ -23,7 +24,7 @@ if (!file.exists("data/Vattenytor_2016.shp")){
 lakes <- st_read("data/Vattenytor_2016.shp")
 
 # Simplified (generalized) municipality polygons
-sthlm <- geojsonio::geojson_sf("https://segregationsbarometern.delmos.se/geojson/kommuner.geojson") %>% 
+sthlm <- geojson_sf("https://segregationsbarometern.delmos.se/geojson/kommuner.geojson") %>% 
   filter(name == "Stockholm") %>% 
   st_cast("POLYGON") %>% 
   st_transform(., st_crs(lakes))
