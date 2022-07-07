@@ -40,4 +40,6 @@ df_delmos <- do.call("rbind", l) %>% rename(regso = regso_namn, kommun = kopplad
 
 regso <- inner_join(regso, df_delmos, by = c("regso" = "regso", "kommun" = "kommun"))
 
+regso <- regso %>% select(uuid, regsokod, regsokod_delmos, regso, everything())
+
 st_write(regso, "data/RegSO_2018_Delmos.gpkg", delete_dsn = TRUE)
