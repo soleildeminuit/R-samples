@@ -1,4 +1,4 @@
-# list.of.packages <- c("pxweb", "openxlsx")
+list.of.packages <- c("pxweb", "openxlsx")
 new.packages <- list.of.packages[!(list.of.packages %in%
                                      installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -7,6 +7,7 @@ library(dplyr)
 library(jsonlite)
 library(sf)
 
+# Kolla om RegSo laddats ned tidigare, annars hämta på nytt.
 if (!file.exists("data/RegSO_2018.shp")){
   # url_deso <- "https://geodata.scb.se/geoserver/stat/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=stat%3ADeSO.2018&outputFormat=SHAPE-ZIP&format_options=charset:UTF-8"
   url_regso <- "https://geodata.scb.se/geoserver/stat/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=stat%3ARegSO.2018&outputFormat=SHAPE-ZIP&format_options=charset:UTF-8"
@@ -20,9 +21,10 @@ if (!file.exists("data/RegSO_2018.shp")){
   unzip(f, exdir = "data")
 }
 
+# Använd RegSo för att lista alla kommuner
 regso <- st_read("data/RegSO_2018.shp", stringsAsFactors = FALSE)
 kommuner <- regso %>% st_drop_geometry() %>% 
-  group_by(kommun) %>% summarise() %>% ungroup()
+  group_by(kommun, kommunnamn) %>% summarise() %>% ungroup()
 
 l <- list()
 for (i in 1:nrow(kommuner)){
@@ -43,6 +45,8 @@ for (i in 1:nrow(kommuner)){
   x <- cbind(x, do.call("rbind", l2))
   
   l[[i]] <- x
+  
+  print(paste(i, ":", kommuner[i,]$kommunnamn, sep=""))
 }
 df_delmos <- do.call("rbind", l) %>% rename(regso = regso_namn, kommun = kopplad_kommun)
 
