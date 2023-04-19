@@ -26,7 +26,7 @@ if (!file.exists("data/DeSO_2018.shp")){
 if (!file.exists("data/pxdf.rds")){
   pxq <- pxweb_query("data/query_befstat.json")
   
-  pxd <- pxweb_get("http://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN",
+  pxd <- pxweb_get("https://api.scb.se/OV0104/v1/doris/sv/ssd/BE/BE0101/BE0101Y/FolkmDesoAldKonN",
                    pxq)
   pxd
   
@@ -41,13 +41,26 @@ deso_sthlm_df <- pxdf %>%
   filter(grepl("^\\d{4}[A-C]\\d{4}$", region) == TRUE,
          substr(region, 1, 4) == "0180",
          ålder == "totalt", kön == "totalt") %>% 
-  select(-ålder, -kön) %>% 
+  dplyr::select(-ålder, -kön) %>% 
   rename(deso = region)
+
+
+deso_sthlm_df <- pxdf %>% 
+  filter(grepl("^\\d{4}[A-C]\\d{4}$", region) == TRUE,
+         substr(region, 1, 4) == "0180",
+         ålder %in% c("0-4 år", "75-79 år", "80- år"), 
+         kön == "totalt") %>% 
+  #select(-ålder, -kön) %>% 
+  rename(deso = region) %>% 
+  group_by(deso) %>% summarise(`Folkmängden per region` = sum(`Folkmängden per region`))
+
+st_write(deso_areas_sf, "../miljöförvaltningen/data/deso_pop_young_old.gpkg", delete_dsn = T)
+st_write(deso_areas_sf %>% st_transform(., crs = 3011), "data/deso_pop_young.gpkg", delete_dsn = T)
 
 # Read join table, DeSO <-> RegSO
 deso_regso <- read.xlsx("https://www.scb.se/contentassets/e3b2f06da62046ba93ff58af1b845c7e/kopplingstabell-deso_regso_20211004.xlsx", 
                         "Blad1",
-                        startRow = 4) %>% select(-Kommun, -Kommunnamn) %>% 
+                        startRow = 4) %>% dplyr::select(-Kommun, -Kommunnamn) %>% 
   rename(deso = DeSO, regso_namn = RegSO, regso = RegSOkod)
 
 # Join DesO and RegSO
