@@ -54,8 +54,8 @@ deso_sthlm_df <- pxdf %>%
   rename(deso = region) %>% 
   group_by(deso) %>% summarise(`Folkmängden per region` = sum(`Folkmängden per region`))
 
-st_write(deso_areas_sf, "../miljöförvaltningen/data/deso_pop_young_old.gpkg", delete_dsn = T)
-st_write(deso_areas_sf %>% st_transform(., crs = 3011), "data/deso_pop_young.gpkg", delete_dsn = T)
+# st_write(deso_areas_sf, "../miljöförvaltningen/data/deso_pop_young_old.gpkg", delete_dsn = T)
+# st_write(deso_areas_sf %>% st_transform(., crs = 3011), "data/deso_pop_young.gpkg", delete_dsn = T)
 
 # Read join table, DeSO <-> RegSO
 deso_regso <- read.xlsx("https://www.scb.se/contentassets/e3b2f06da62046ba93ff58af1b845c7e/kopplingstabell-deso_regso_20211004.xlsx", 
@@ -89,8 +89,8 @@ regso_areas_sf <- regso_areas_sf %>% left_join(.,
                                                by = "regso")
 
 # Spara geodata, med befolkningssiffror.
-st_write(deso_areas_sf, "data/deso_pop.gpkg")
-st_write(regso_areas_sf, "data/regso_pop.gpkg")
+# st_write(deso_areas_sf, "data/deso_pop.gpkg")
+st_write(regso_areas_sf, "data/regso_pop.gpkg", delete_dsn = TRUE)
 
 # # Create a thematic map
 tm_shape(regso_areas_sf) + 
