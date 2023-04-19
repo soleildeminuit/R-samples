@@ -31,7 +31,7 @@ for (package in c(
 # https://api-portal.systembolaget.se/products/Open%20API                         #
 #                                                                                 #
 ###################################################################################
-api_key <- "ENTER_API_KEY_HERE"
+api_key <- "cd585a82c74849bcafee0207a2771849"
 
 deso <- st_read("data/deso_pop.gpkg")
 
@@ -56,7 +56,7 @@ stores = fromJSON(
   select(-openingHours)
 
 # Skapa geografiska objekt av butiksraderna.
-stores <- stores %>% 
+stores <- stores %>% filter(!is.na(position.latitude)) %>% 
   st_as_sf(., coords = c("position.longitude", "position.latitude"), crs = 4326)
 
 # För att välja endast de som befinner sig inom Stockholms stads gränser...
