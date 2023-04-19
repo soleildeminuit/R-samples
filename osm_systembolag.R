@@ -21,7 +21,7 @@ for (package in c(
 # ###################################################################################
 
 # Hämta gränser för stadsdelsnämndsområden
-sdn <- st_read("data/sdn_2020.shp") %>%
+sdn <- st_read("data/sdn_2020.shp") %>% # Replace with sdn
   st_zm(drop = TRUE) %>% 
   mutate(Namn = Sdn_omarde) %>% 
   st_transform(crs = 4326)
