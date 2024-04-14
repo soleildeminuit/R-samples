@@ -16,10 +16,16 @@ library(sf)
 library(tmap)
 library(readr)
 
+# https://www.statistikdatabasen.scb.se/sq/148233
+
 # Läs in befolkningsdata från CSV-fil
-population_file_path <- "kartdagarna/data/000005FF_20240414-181616.csv"
+# population_file_path <- "kartdagarna/data/000005FF_20240414-181616.csv"
+
+# Ange URL till CSV-filen
+population_url <- "https://www.statistikdatabasen.scb.se/sq/148233"
+
 # Ange teckenkodning när du läser in CSV-filen
-population_data <- read_csv(population_file_path, locale = locale(encoding = "ISO-8859-1"))
+population_data <- read_csv(population_url, locale = locale(encoding = "ISO-8859-1"))
 
 # Dela upp 'region' kolumnen till 'kommun' och 'regso'
 population_data <- population_data %>%
