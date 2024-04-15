@@ -60,9 +60,17 @@ deso$scaled_antal <- deso$normalized_antal * 100
 #   stockholm_bbox <- st_bbox(c(xmin = 17.76069, ymin = 59.22726, xmax = 18.20007, ymax = 59.44028),
 #                             crs = st_crs(4326))
 # })
+# stockholm_bbox_polygon <- getbb("Stockholm, Sweden", format_out = "sf_polygon") %>% 
+#   st_set_crs(4326)  # Ange koordinatsystemet till WGS84
 
 stockholm_bbox <- st_bbox(c(xmin = 17.76069, ymin = 59.22726, xmax = 18.20007, ymax = 59.44028),
                           crs = st_crs(4326))
+
+# Konvertera bounding boxen till en sf-polygon
+stockholm_bbox_polygon <- st_as_sfc(stockholm_bbox)
+
+# Spara som en sf-objekt med en enda feature
+stockholm_bbox_polygon <- st_sf(geometry = stockholm_bbox_polygon)
 
 # Kontrollera bounding box
 print(stockholm_bbox)
