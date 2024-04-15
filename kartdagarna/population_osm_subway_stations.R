@@ -51,12 +51,18 @@ deso$normalized_antal <- deso$antal / max(deso$antal)
 deso$scaled_antal <- deso$normalized_antal * 100
 
 # Hämta bounding box-koordinater för Stockholms kommun i WGS84
-stockholm_bbox_polygon <- getbb("Stockholm, Sweden", format_out = "sf_polygon") %>% 
-  st_set_crs(4326)  # Ange koordinatsystemet till WGS84
+tryCatch({
+  stockholm_bbox_polygon <- getbb("Stockholm, Sweden", format_out = "sf_polygon") %>% 
+    st_set_crs(4326)  # Ange koordinatsystemet till WGS84
+  stockholm_bbox <- st_bbox(stockholm_bbox_polygon)
+}, error = function(e) {
+  message("Failed to get bounding box from OpenStreetMap, using default values.")
+  stockholm_bbox <- st_bbox(c(xmin = 17.76069, ymin = 59.22726, xmax = 18.20007, ymax = 59.44028),
+                            crs = st_crs(4326))
+})
 
-# Omvandla bounding box till en spatial bounding box (bbox) objekt
-stockholm_bbox <- st_bbox(stockholm_bbox_polygon)
-
+# Kontrollera bounding box
+print(stockholm_bbox)
 # För att hämta tunnelbanestationer (punkter)
 subway_stations_query <- opq(bbox = stockholm_bbox) %>%
   add_osm_feature(key = 'station', value = 'subway') %>%
